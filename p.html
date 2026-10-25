@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="light dark">
+<title>محفظتي - يارب يسرها</title>
+<style>
+:root {
+  --bg:#f5f5f7; --card:#ffffff; --card2:#f5f5f7; --fg:#1d1d1f; --muted:#6e6e73; --line:rgba(0,0,0,.08);
+  --ok:#248a3d; --ok-bg:rgba(52,199,89,.14); --bad:#d70015; --bad-bg:rgba(255,59,48,.12); --accent:#0071e3;
+  --shadow:0 1px 2px rgba(0,0,0,.04), 0 8px 30px rgba(0,0,0,.06);
+  --glass:rgba(245,245,247,.72);
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#000; --card:#1c1c1e; --card2:#2c2c2e; --fg:#f5f5f7; --muted:#98989d; --line:rgba(255,255,255,.1);
+    --ok:#30d158; --ok-bg:rgba(48,209,88,.16); --bad:#ff453a; --bad-bg:rgba(255,69,58,.16); --accent:#0a84ff;
+    --shadow:none; --glass:rgba(0,0,0,.6); }
+}
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html { -webkit-text-size-adjust:100%; }
+body { margin:0; background:var(--bg); color:var(--fg); line-height:1.5; -webkit-font-smoothing:antialiased;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Tahoma,"Noto Sans Arabic",system-ui,sans-serif; }
+p,h1,h2,h3,dl,dd { margin:0; }
+.num { direction:ltr; unicode-bidi:isolate; font-variant-numeric:tabular-nums; }
+.pos { color:var(--ok); } .neg { color:var(--bad); }
+main { max-width:980px; margin:0 auto; padding:0 20px 64px; }
+
+/* nav */
+.nav { position:sticky; top:0; z-index:10; backdrop-filter:saturate(180%) blur(20px); -webkit-backdrop-filter:saturate(180%) blur(20px);
+  background:var(--glass); border-bottom:1px solid var(--line); }
+.nav div { max-width:980px; margin:0 auto; padding:12px 20px; display:flex; justify-content:space-between; align-items:center; font-size:.9rem; }
+.nav b { font-weight:600; } .nav span { color:var(--muted); }
+
+/* hero */
+.hero { text-align:center; padding:64px 0 40px; }
+.eyebrow { color:var(--muted); font-size:1rem; font-weight:500; }
+.hero h1 { font-size:clamp(2.6rem, 9vw, 4.6rem); font-weight:700; letter-spacing:-.02em; line-height:1.05; margin:10px 0 6px; }
+.hero h1 small { font-size:.45em; font-weight:600; color:var(--muted); margin-inline-end:.15em; }
+.pill { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:999px; font-weight:600; font-size:.95rem; }
+.pill.pos { background:var(--ok-bg); } .pill.neg { background:var(--bad-bg); }
+.sub { color:var(--muted); margin-top:14px; font-size:.95rem; }
+
+/* cards */
+.card { background:var(--card); border-radius:24px; padding:24px; box-shadow:var(--shadow); min-width:0; }
+.grid { display:grid; gap:14px; }
+.kpis { grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr)); }
+.kpi .l { color:var(--muted); font-size:.9rem; }
+.kpi .v { font-size:1.9rem; font-weight:700; letter-spacing:-.01em; margin-top:4px; }
+h2.sec { font-size:1.75rem; font-weight:700; letter-spacing:-.01em; margin:56px 0 6px; }
+.secsub { color:var(--muted); margin-bottom:18px; font-size:.95rem; max-width:44rem; }
+
+/* investors */
+.inv { grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr)); }
+.inv .name { font-size:1.05rem; font-weight:600; }
+.inv .wallet { font-size:2rem; font-weight:700; letter-spacing:-.01em; margin:6px 0 2px; }
+.inv .cap { color:var(--muted); font-size:.85rem; }
+.rows { margin-top:16px; display:grid; gap:10px; }
+.rows div { display:flex; justify-content:space-between; font-size:.95rem; border-top:1px solid var(--line); padding-top:10px; }
+.rows dt { color:var(--muted); } .rows dd { font-weight:500; }
+.bar { height:6px; border-radius:3px; background:var(--card2); overflow:hidden; margin-top:14px; }
+.bar i { display:block; height:100%; border-radius:3px; background:var(--accent); }
+
+/* chart */
+#chart { position:relative; margin-top:8px; }
+#chart svg { width:100%; height:auto; display:block; direction:ltr; overflow:visible; }
+.tip { position:absolute; pointer-events:none; background:var(--card); box-shadow:0 8px 30px rgba(0,0,0,.2); border-radius:14px; padding:10px 14px; font-size:.85rem; white-space:nowrap; z-index:3; border:1px solid var(--line); }
+.tip b { display:block; font-size:.95rem; }
+
+/* trades */
+.chips { display:inline-flex; background:var(--card2); border-radius:12px; padding:3px; gap:2px; margin-bottom:16px; }
+.chips button { border:0; background:transparent; color:var(--fg); font:inherit; font-size:.9rem; padding:7px 16px; border-radius:10px; cursor:pointer; }
+.chips button[aria-pressed=true] { background:var(--card); box-shadow:0 1px 4px rgba(0,0,0,.15); font-weight:600; }
+.trades { display:grid; gap:10px; }
+details.t { background:var(--card); border-radius:20px; box-shadow:var(--shadow); overflow:hidden; }
+details.t > summary { list-style:none; cursor:pointer; padding:16px 20px; display:grid; grid-template-columns:auto 1fr auto; gap:14px; align-items:center; }
+details.t > summary::-webkit-details-marker { display:none; }
+.ico { width:44px; height:44px; border-radius:12px; display:grid; place-items:center; font-weight:700; font-size:.75rem; letter-spacing:.02em; }
+.ico.pos { background:var(--ok-bg); } .ico.neg { background:var(--bad-bg); }
+.tt .tk { font-weight:600; font-size:1.05rem; }
+.tt .tm { color:var(--muted); font-size:.85rem; display:flex; flex-wrap:wrap; gap:4px 10px; margin-top:2px; }
+.tag { padding:0 8px; border-radius:6px; background:var(--card2); font-size:.75rem; font-weight:600; line-height:1.6; }
+.res { text-align:left; }
+.res .amt { font-weight:700; font-size:1.1rem; }
+.res .pc { font-size:.85rem; font-weight:500; }
+.chev { display:inline-block; margin-inline-start:10px; transition:transform .2s; color:var(--muted); font-size:.8rem; }
+details[open] .chev { transform:rotate(90deg); }
+.detail { padding:4px 20px 20px; display:grid; gap:18px; }
+.metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(8.5rem,1fr)); gap:10px; }
+.m { background:var(--card2); border-radius:14px; padding:12px 14px; }
+.m .l { color:var(--muted); font-size:.78rem; } .m .v { font-weight:600; margin-top:2px; font-size:1rem; }
+.split { width:100%; border-collapse:collapse; font-size:.92rem; }
+.split th { text-align:right; color:var(--muted); font-weight:500; font-size:.78rem; padding:0 8px 8px; white-space:nowrap; }
+.split td { padding:10px 8px; border-top:1px solid var(--line); white-space:nowrap; }
+.split td:first-child { font-weight:600; }
+.scroll { overflow-x:auto; }
+.empty { color:var(--muted); text-align:center; padding:30px; }
+footer { color:var(--muted); font-size:.8rem; text-align:center; margin-top:56px; }
+@media (max-width:520px) {
+  main { padding:0 14px 48px; } .card { padding:18px; border-radius:20px; }
+  details.t > summary { padding:14px; gap:10px; } .ico { width:38px; height:38px; }
+}
+</style>
+</head>
+<body>
+<div class="nav"><div><b>يارب يسرها</b><span id="navname"></span></div></div>
+<main>
+  <p class="empty" id="msg">جاري فتح محفظتك…</p>
+  <div id="app" hidden>
+    <section class="hero">
+      <p class="eyebrow">قيمة محفظتك</p>
+      <h1 class="num" id="hero"></h1>
+      <span class="pill" id="heropill"></span>
+      <p class="sub" id="herosub"></p>
+    </section>
+    <section class="grid kpis" id="kpis"></section>
+    <h2 class="sec">الصفقات</h2>
+    <p class="secsub">نسبة ربح أو خسارة كل صفقة. الأحدث أولاً.</p>
+    <div class="trades" id="trades"></div>
+  </div>
+  <footer>هذه الصفحة تعرض أرقامك أنت فقط. لا تشارك الرابط مع أحد.</footer>
+</main>
+<script>
+async function openData() {
+  const q = new URLSearchParams(location.hash.slice(1)), u = q.get('u'), k = q.get('k');
+  if (!u || !k) throw new Error('الرابط ناقص. اطلب من فارس يرسل لك الرابط كامل.');
+  const b64 = s => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+  const res = await fetch(encodeURIComponent(u) + '.bin', { cache: 'no-store' });
+  if (!res.ok) throw new Error('ما لقيت بياناتك. تأكد من الرابط.');
+  const raw = b64((await res.text()).trim()), key = b64(k);
+  const iv = raw.slice(0, 16), mac = raw.slice(16, 48), ct = raw.slice(48);
+  const sha = async (p, m) => new Uint8Array(await crypto.subtle.digest('SHA-256', new Uint8Array([p, ...m])));
+  const mk = await crypto.subtle.importKey('raw', await sha(109, key), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+  if (!(await crypto.subtle.verify('HMAC', mk, mac, new Uint8Array([...iv, ...ct])))) throw new Error('الرابط غير صحيح أو انتهت صلاحيته. اطلب رابط جديد من فارس.');
+  const ek = await crypto.subtle.importKey('raw', await sha(101, key), 'AES-CBC', false, ['decrypt']);
+  return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-CBC', iv }, ek, ct)));
+}
+
+(async function () {
+  const msg = document.getElementById('msg');
+  try {
+    const D = await openData(); render(D);
+    msg.hidden = true; document.getElementById('app').hidden = false;
+  } catch (e) { msg.textContent = (e && e.message && /[\u0600-\u06FF]/.test(e.message)) ? e.message : 'ما قدرت أفتح الصفحة. تأكد أن الرابط كامل.'; }
+
+  function render(D) {
+    const nf = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const sign = v => v > 0 ? '+' : v < 0 ? '-' : '';
+    const money = v => (v < 0 ? '-' : '') + '$' + nf.format(Math.abs(v));
+    const sMoney = v => sign(v) + '$' + nf.format(Math.abs(v));
+    const sPct = v => sign(v) + (Math.abs(v) * 100).toFixed(2) + '%';
+    const cls = v => v > 0 ? 'pos' : v < 0 ? 'neg' : '';
+    const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x !== undefined) e.textContent = x; return e; };
+    const num = (x, c) => el('span', 'num ' + (c || ''), x);
+    const fmtDate = s => { const d = new Date(s + 'T00:00:00'); return isNaN(d) ? s : d.toLocaleDateString('ar-u-nu-latn', { day: 'numeric', month: 'long', year: 'numeric' }); };
+    document.title = 'محفظة ' + D.name + ' - يارب يسرها';
+    document.getElementById('navname').textContent = D.name;
+    const hero = document.getElementById('hero'); hero.append(el('small', '', '$'), nf.format(D.wallet));
+    const hp = document.getElementById('heropill'); hp.className = 'pill ' + cls(D.pl); hp.append(num(sMoney(D.pl)), ' · ', num(sPct(D.pl_pct)));
+    document.getElementById('herosub').append('دخلت بتاريخ ', num(D.join), ' · آخر تحديث ', num(D.as_of));
+    const kb = document.getElementById('kpis');
+    [['مبلغ دخولك', money(D.invested), ''], ['ربحك حتى الآن', sMoney(D.pl), cls(D.pl)], ['عائد الصندوق منذ البداية', sPct(D.fund_roi), cls(D.fund_roi)]]
+      .forEach(([l, v, c]) => { const k = el('div', 'card kpi'); const n = num(v, 'v ' + c); n.style.display = 'block'; k.append(el('p', 'l', l), n); kb.append(k); });
+    const box = document.getElementById('trades');
+    D.trades.slice().sort((a, b) => b.no - a.no).forEach(t => {
+      const d = el('div', 'card'); d.style.cssText = 'display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:14px 20px;border-radius:20px';
+      const tk = String(t.contract).split(' ')[0];
+      const ico = el('div', 'ico ' + cls(t.pl_pct), tk.slice(0, 4)); ico.style.direction = 'ltr';
+      const tt = el('div', 'tt'); tt.append(el('p', 'tk', t.contract)); const tm = el('p', 'tm'); tm.append(el('span', '', fmtDate(t.date)));
+      tm.append(el('span', 'tag', t.in ? 'ضمن محفظتك' : 'قبل دخولك')); tt.append(tm);
+      const r = el('div', 'res'); r.append(num(sPct(t.pl_pct), 'amt ' + cls(t.pl_pct)));
+      d.append(ico, tt, r); if (!t.in) d.style.opacity = '.6'; box.append(d);
+    });
+  }
+})();
+</script>
+</body>
+</html>
