@@ -120,7 +120,7 @@ footer { color:var(--muted); font-size:.8rem; text-align:center; margin-top:56px
     </section>
     <section class="grid kpis" id="kpis"></section>
     <h2 class="sec">الصفقات</h2>
-    <p class="secsub">نسبة ربح أو خسارة كل صفقة. الأحدث أولاً.</p>
+    <p class="secsub">كل يوم وصفقاته. اضغط على اليوم تشوف الصفقات، ونسبة كل صفقة وربحك أنت منها.</p>
     <div class="trades" id="trades"></div>
   </div>
   <footer>هذه الصفحة تعرض أرقامك أنت فقط. لا تشارك الرابط مع أحد.</footer>
@@ -168,15 +168,35 @@ async function openData() {
     const kb = document.getElementById('kpis');
     [['مبلغ دخولك', money(D.invested), '', sar(D.invested)], ['ربحك حتى الآن', sMoney(D.pl), cls(D.pl), sSar(D.pl)], ['عائد الصندوق منذ البداية', sPct(D.fund_roi), cls(D.fund_roi)]]
       .forEach(([l, v, c, sv]) => { const k = el('div', 'card kpi'); const n = num(v, 'v ' + c); n.style.display = 'block'; k.append(el('p', 'l', l), n); if (sv) { const x = num(sv, 's ' + c); x.style.display = 'block'; k.append(x); } kb.append(k); });
+    // الصفقات مجمّعة حسب اليوم، وربحك أنت فقط في كل صفقة
     const box = document.getElementById('trades');
-    D.trades.slice().sort((a, b) => b.no - a.no).forEach(t => {
-      const d = el('div', 'card'); d.style.cssText = 'display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:14px 20px;border-radius:20px';
-      const tk = String(t.contract).split(' ')[0];
-      const ico = el('div', 'ico ' + cls(t.pl_pct), tk.slice(0, 4)); ico.style.direction = 'ltr';
-      const tt = el('div', 'tt'); tt.append(el('p', 'tk', t.contract)); const tm = el('p', 'tm'); tm.append(el('span', '', fmtDate(t.date)));
-      tm.append(el('span', 'tag', t.in ? 'ضمن محفظتك' : 'قبل دخولك')); tt.append(tm);
-      const r = el('div', 'res'); r.append(num(sPct(t.pl_pct), 'amt ' + cls(t.pl_pct)));
-      d.append(ico, tt, r); if (!t.in) d.style.opacity = '.6'; box.append(d);
+    const count = n => n === 1 ? 'صفقة واحدة' : n === 2 ? 'صفقتين' : n <= 10 ? n + ' صفقات' : n + ' صفقة';
+    const days = new Map();
+    D.trades.slice().sort((x, y) => y.no - x.no).forEach(t => { const k = t.day || t.date; if (!days.has(k)) days.set(k, []); days.get(k).push(t); });
+    [...days.keys()].sort().reverse().forEach((k, i) => {
+      const ts = days.get(k), mine = ts.filter(t => t.in), sum = mine.reduce((x, t) => x + t.mine, 0);
+      const det = el('details', 't'); if (i === 0) det.open = true;
+      const sm = el('summary');
+      const ico = el('div', 'ico ' + (mine.length ? cls(sum) : ''), k.slice(8, 10)); ico.style.direction = 'ltr';
+      const tt = el('div', 'tt'); tt.append(el('p', 'tk', fmtDate(k)));
+      const tm = el('p', 'tm'); tm.append(el('span', '', count(ts.length)));
+      if (mine.length) { const w = mine.filter(t => t.mine > 0).length; tm.append(el('span', '', w + ' رابحة · ' + (mine.length - w) + ' خاسرة')); } else tm.append(el('span', 'tag', 'قبل دخولك'));
+      tt.append(tm);
+      const r = el('div', 'res');
+      if (mine.length) { r.append(num(sMoney(sum), 'amt ' + cls(sum)), document.createElement('br'), num(sSar(sum), 'pc ' + cls(sum))); r.firstChild.style.display = 'inline-block'; }
+      r.append(el('span', 'chev', '‹'));
+      sm.append(ico, tt, r); det.append(sm);
+      const list = el('div', 'detail');
+      ts.forEach(t => {
+        const row = el('div', 'm'); row.style.cssText = 'display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center';
+        const left = el('div'); left.append(el('p', 'tk', t.contract)); left.firstChild.style.cssText = 'font-weight:600;direction:ltr;text-align:right';
+        const pl = el('p', 'l'); pl.append(num(sPct(t.pl_pct), cls(t.pl_pct))); left.append(pl);
+        const right = el('div', 'res');
+        if (t.in) { right.append(num(sMoney(t.mine), 'amt ' + cls(t.mine)), document.createElement('br'), num(sSar(t.mine), 'pc ' + cls(t.mine))); right.firstChild.style.display = 'inline-block'; }
+        else { right.append(el('span', 'tag', 'قبل دخولك')); row.style.opacity = '.6'; }
+        row.append(left, right); list.append(row);
+      });
+      det.append(list); box.append(det);
     });
   }
 })();

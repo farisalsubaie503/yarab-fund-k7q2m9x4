@@ -124,7 +124,7 @@ footer { color:var(--muted); font-size:.8rem; text-align:center; margin-top:56px
   <div class="card"><div id="chart"></div></div>
 
   <h2 class="sec">الصفقات</h2>
-  <p class="secsub">الأحدث أولاً. اضغط على أي صفقة تشوف الدخول والخروج والمدة وحصة كل مستثمر.</p>
+  <p class="secsub">كل يوم وصفقاته، الأحدث أولاً. اضغط على اليوم تشوف صفقاته، واضغط على الصفقة تشوف الدخول والخروج والمدة وحصة كل مستثمر.</p>
   <div class="chips" id="chips">
     <button data-f="all" aria-pressed="true">الكل</button>
     <button data-f="win" aria-pressed="false">الرابحة</button>
@@ -303,7 +303,22 @@ openData().then(function (D) { window.FUND = D; (function () {
     list.replaceChildren();
     const rows = all.filter(t => f === 'all' || (f === 'win' ? t.pl > 0 : t.pl < 0));
     if (!rows.length) list.append(el('p', 'empty', 'ما فيه صفقات'));
-    rows.forEach(t => list.append(tradeCard(t)));
+    // مجمّعة حسب اليوم (يوم الإغلاق)، اضغط اليوم تشوف صفقاته
+    const days = new Map();
+    rows.forEach(t => { const k = t.close_date || t.date; if (!days.has(k)) days.set(k, []); days.get(k).push(t); });
+    [...days.keys()].sort().reverse().forEach((k, i) => {
+      const ts = days.get(k), sum = ts.reduce((x, t) => x + t.pl, 0), w = ts.filter(t => t.pl > 0).length;
+      const det = el('details', 't'); if (i === 0) det.open = true;
+      const sm = el('summary');
+      const ico = el('div', 'ico ' + cls(sum), k.slice(8, 10)); ico.style.direction = 'ltr';
+      const tt = el('div', 'tt'); tt.append(el('p', 'tk', fmtDate(k)));
+      const tm = el('p', 'tm'); tm.append(el('span', '', ts.length + ' صفقة'), el('span', '', w + ' رابحة · ' + (ts.length - w) + ' خاسرة')); tt.append(tm);
+      const r = el('div', 'res'); r.append(num(sMoney(sum), 'amt ' + cls(sum)), document.createElement('br'), num(sar(sum * (F.usd_sar || 3.75)), 'pc ' + cls(sum)), el('span', 'chev', '‹'));
+      r.firstChild.style.display = 'inline-block';
+      sm.append(ico, tt, r); det.append(sm);
+      const inner = el('div', 'detail'); ts.forEach(t => { const c = tradeCard(t); c.style.background = 'var(--card2)'; c.style.boxShadow = 'none'; inner.append(c); });
+      det.append(inner); list.append(det);
+    });
   }
   render('all');
   document.querySelectorAll('#chips button').forEach(b => b.addEventListener('click', () => {
