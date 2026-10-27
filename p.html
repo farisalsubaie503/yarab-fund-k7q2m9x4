@@ -190,10 +190,10 @@ async function openData() {
       ts.forEach(t => {
         const row = el('div', 'm'); row.style.cssText = 'display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center';
         const left = el('div'); left.append(el('p', 'tk', t.contract)); left.firstChild.style.cssText = 'font-weight:600;direction:ltr;text-align:right';
-        const pl = el('p', 'l'); pl.append(num(sPct(t.pl_pct), cls(t.pl_pct))); left.append(pl);
         const right = el('div', 'res');
-        if (t.in) { right.append(num(sMoney(t.mine), 'amt ' + cls(t.mine)), document.createElement('br'), num(sSar(t.mine), 'pc ' + cls(t.mine))); right.firstChild.style.display = 'inline-block'; }
-        else { right.append(el('span', 'tag', 'قبل دخولك')); row.style.opacity = '.6'; }
+        // الخط الكبير: المبلغ بالدولار والنسبة جنبه، وتحته المبلغ بالريال
+        if (t.in) { right.append(num(sMoney(t.mine) + '  ·  ' + sPct(t.pl_pct), 'amt ' + cls(t.mine)), document.createElement('br'), num(sSar(t.mine), 'pc ' + cls(t.mine))); right.firstChild.style.display = 'inline-block'; }
+        else { right.append(num(sPct(t.pl_pct), 'amt ' + cls(t.pl_pct)), document.createElement('br'), el('span', 'tag', 'قبل دخولك')); right.firstChild.style.display = 'inline-block'; row.style.opacity = '.6'; }
         row.append(left, right); list.append(row);
       });
       det.append(list); box.append(det);
