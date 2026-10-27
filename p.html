@@ -38,6 +38,8 @@ main { max-width:980px; margin:0 auto; padding:0 20px 64px; }
 .hero { text-align:center; padding:64px 0 40px; }
 .eyebrow { color:var(--muted); font-size:1rem; font-weight:500; }
 .hero h1 { font-size:clamp(2.6rem, 9vw, 4.6rem); font-weight:700; letter-spacing:-.02em; line-height:1.05; margin:10px 0 6px; }
+.sarline { color:var(--muted); font-size:1.15rem; font-weight:600; margin:0 0 12px; }
+.kpi .s { color:var(--muted); font-size:.95rem; font-weight:600; margin-top:2px; }
 .hero h1 small { font-size:.45em; font-weight:600; color:var(--muted); margin-inline-end:.15em; }
 .pill { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:999px; font-weight:600; font-size:.95rem; }
 .pill.pos { background:var(--ok-bg); } .pill.neg { background:var(--bad-bg); }
@@ -112,6 +114,7 @@ footer { color:var(--muted); font-size:.8rem; text-align:center; margin-top:56px
     <section class="hero">
       <p class="eyebrow">قيمة محفظتك</p>
       <h1 class="num" id="hero"></h1>
+      <p class="sarline num" id="herosar"></p>
       <span class="pill" id="heropill"></span>
       <p class="sub" id="herosub"></p>
     </section>
@@ -150,6 +153,7 @@ async function openData() {
     const sign = v => v > 0 ? '+' : v < 0 ? '-' : '';
     const money = v => (v < 0 ? '-' : '') + '$' + nf.format(Math.abs(v));
     const sMoney = v => sign(v) + '$' + nf.format(Math.abs(v));
+    const R = D.usd_sar || 3.75, sar = v => nf.format(Math.abs(v) * R) + ' ر.س', sSar = v => sign(v) + sar(v);
     const sPct = v => sign(v) + (Math.abs(v) * 100).toFixed(2) + '%';
     const cls = v => v > 0 ? 'pos' : v < 0 ? 'neg' : '';
     const el = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x !== undefined) e.textContent = x; return e; };
@@ -158,11 +162,12 @@ async function openData() {
     document.title = 'محفظة ' + D.name + ' - يارب يسرها';
     document.getElementById('navname').textContent = D.name;
     const hero = document.getElementById('hero'); hero.append(el('small', '', '$'), nf.format(D.wallet));
-    const hp = document.getElementById('heropill'); hp.className = 'pill ' + cls(D.pl); hp.append(num(sMoney(D.pl)), ' · ', num(sPct(D.pl_pct)));
+    const hp = document.getElementById('heropill'); hp.className = 'pill ' + cls(D.pl); hp.append(num(sMoney(D.pl)), ' · ', num(sSar(D.pl)), ' · ', num(sPct(D.pl_pct)));
+    document.getElementById('herosar').textContent = sar(D.wallet);
     document.getElementById('herosub').append('دخلت بتاريخ ', num(D.join), ' · آخر تحديث ', num(D.as_of));
     const kb = document.getElementById('kpis');
-    [['مبلغ دخولك', money(D.invested), ''], ['ربحك حتى الآن', sMoney(D.pl), cls(D.pl)], ['عائد الصندوق منذ البداية', sPct(D.fund_roi), cls(D.fund_roi)]]
-      .forEach(([l, v, c]) => { const k = el('div', 'card kpi'); const n = num(v, 'v ' + c); n.style.display = 'block'; k.append(el('p', 'l', l), n); kb.append(k); });
+    [['مبلغ دخولك', money(D.invested), '', sar(D.invested)], ['ربحك حتى الآن', sMoney(D.pl), cls(D.pl), sSar(D.pl)], ['عائد الصندوق منذ البداية', sPct(D.fund_roi), cls(D.fund_roi)]]
+      .forEach(([l, v, c, sv]) => { const k = el('div', 'card kpi'); const n = num(v, 'v ' + c); n.style.display = 'block'; k.append(el('p', 'l', l), n); if (sv) { const x = num(sv, 's ' + c); x.style.display = 'block'; k.append(x); } kb.append(k); });
     const box = document.getElementById('trades');
     D.trades.slice().sort((a, b) => b.no - a.no).forEach(t => {
       const d = el('div', 'card'); d.style.cssText = 'display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:14px 20px;border-radius:20px';
