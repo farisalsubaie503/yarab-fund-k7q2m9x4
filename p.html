@@ -119,9 +119,18 @@ footer { color:var(--muted); font-size:.8rem; text-align:center; margin-top:56px
       <p class="sub" id="herosub"></p>
     </section>
     <section class="grid kpis" id="kpis"></section>
+    <h2 class="sec">ملخص الأسبوع والشهر</h2>
+    <p class="secsub">ربحك أنت من الصفقات المقفلة في كل فترة.</p>
+    <section class="grid kpis" id="periods"></section>
+    <h2 class="sec">إحصائيات الأداء</h2>
+    <p class="secsub">محسوبة من الصفقات اللي دخلت فيها.</p>
+    <section class="grid kpis" id="stats"></section>
     <h2 class="sec">الصفقات</h2>
     <p class="secsub">كل يوم وصفقاته. اضغط على اليوم تشوف الصفقات، ونسبة كل صفقة وربحك أنت منها.</p>
     <div class="trades" id="trades"></div>
+    <h2 class="sec">سجل الإيداعات والسحوبات</h2>
+    <p class="secsub">كل حركة على رأس مالك، الأحدث أولاً.</p>
+    <div class="trades" id="flows"></div>
   </div>
   <footer>هذه الصفحة تعرض أرقامك أنت فقط. لا تشارك الرابط مع أحد.</footer>
 </main>
@@ -168,6 +177,47 @@ async function openData() {
     const kb = document.getElementById('kpis');
     [['مبلغ دخولك', money(D.invested), '', sar(D.invested)], ['ربحك حتى الآن', sMoney(D.pl), cls(D.pl), sSar(D.pl)], ['عائد الصندوق منذ البداية', sPct(D.fund_roi), cls(D.fund_roi)]]
       .forEach(([l, v, c, sv]) => { const k = el('div', 'card kpi'); const n = num(v, 'v ' + c); n.style.display = 'block'; k.append(el('p', 'l', l), n); if (sv) { const x = num(sv, 's ' + c); x.style.display = 'block'; k.append(x); } kb.append(k); });
+    // ملخص الأسبوع والشهر + إحصائيات الأداء (من صفقاتك أنت فقط)
+    const mineT = D.trades.filter(t => t.in), dayOf = t => t.day || t.date;
+    const cnt = n => n === 1 ? 'صفقة واحدة' : n === 2 ? 'صفقتين' : n <= 10 ? n + ' صفقات' : n + ' صفقة';
+    const card = (box, l, v, c, sub) => { const k = el('div', 'card kpi'); const n = num(v, 'v ' + (c || '')); n.style.display = 'block'; k.append(el('p', 'l', l), n);
+      if (sub) { const x = el('p', 's', sub); x.style.marginTop = '2px'; k.append(x); } box.append(k); };
+    const PD = x => { const [y, m, d] = x.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)); }, SD = d => d.toISOString().slice(0, 10);
+    const d0 = PD(D.as_of), wk = new Date(d0 - ((d0.getUTCDay() + 6) % 7) * 864e5), pw = new Date(wk - 7 * 864e5);
+    const mon = D.as_of.slice(0, 7), pm = SD(new Date(Date.UTC(d0.getUTCFullYear(), d0.getUTCMonth() - 1, 1))).slice(0, 7);
+    const monthName = m => PD(m + '-01').toLocaleDateString('ar-u-nu-latn', { month: 'long', timeZone: 'UTC' });
+    const shortD = x => PD(x).toLocaleDateString('ar-u-nu-latn', { day: 'numeric', month: 'long', timeZone: 'UTC' });
+    const period = (box, label, f) => { const ts = mineT.filter(t => f(dayOf(t))), v = ts.reduce((x, t) => x + t.mine, 0);
+      card(box, label, ts.length ? sMoney(v) : '—', ts.length ? cls(v) : '', ts.length ? sSar(v) + ' · ' + cnt(ts.length) : 'ما فيه صفقات'); };
+    const pb = document.getElementById('periods');
+    period(pb, 'هذا الأسبوع (من ' + shortD(SD(wk)) + ')', x => x >= SD(wk) && x <= D.as_of);
+    period(pb, 'الأسبوع الماضي', x => x >= SD(pw) && x < SD(wk));
+    period(pb, 'شهر ' + monthName(mon), x => x.startsWith(mon));
+    period(pb, 'شهر ' + monthName(pm), x => x.startsWith(pm));
+    const st = document.getElementById('stats'), wins = mineT.filter(t => t.mine > 0), losses = mineT.filter(t => t.mine < 0);
+    const avg = arr => arr.reduce((x, t) => x + t.pl_pct, 0) / (arr.length || 1);
+    const byDay = new Map(); mineT.forEach(t => byDay.set(dayOf(t), (byDay.get(dayOf(t)) || 0) + t.mine));
+    const dz = [...byDay.entries()].sort((x, y) => y[1] - x[1]);
+    card(st, 'نسبة الصفقات الرابحة', mineT.length ? Math.round(wins.length / mineT.length * 100) + '%' : '—', '', wins.length + ' رابحة من ' + mineT.length);
+    card(st, 'متوسط الربح', wins.length ? sPct(avg(wins)) : '—', 'pos', 'لكل صفقة رابحة');
+    card(st, 'متوسط الخسارة', losses.length ? sPct(avg(losses)) : '—', 'neg', 'لكل صفقة خاسرة');
+    if (dz.length) card(st, 'أفضل يوم', sMoney(dz[0][1]), cls(dz[0][1]), fmtDate(dz[0][0]) + ' · ' + sSar(dz[0][1]));
+    if (dz.length > 1) { const w = dz[dz.length - 1]; card(st, 'أسوأ يوم', sMoney(w[1]), cls(w[1]), fmtDate(w[0]) + ' · ' + sSar(w[1])); }
+    card(st, 'أيام التداول', String(dz.length), '', dz.filter(x => x[1] > 0).length + ' رابحة · ' + dz.filter(x => x[1] < 0).length + ' خاسرة');
+
+    // سجل الإيداعات والسحوبات
+    const fb = document.getElementById('flows'), fl = (D.flows || []).slice().sort((x, y) => y.date < x.date ? -1 : 1);
+    if (!fl.length) fb.append(el('p', 'empty', 'ما فيه حركات'));
+    fl.forEach(f => {
+      const row = el('div', 'card'); row.style.cssText = 'display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:14px 20px;border-radius:20px';
+      const left = el('div', 'tt'); left.append(el('p', 'tk', f.amount >= 0 ? 'إيداع' : 'سحب'), el('p', 'tm', fmtDate(f.date)));
+      const right = el('div', 'res'); right.append(num(sMoney(f.amount), 'amt ' + cls(f.amount)), document.createElement('br'), num(sSar(f.amount), 'pc ' + cls(f.amount)));
+      right.firstChild.style.display = 'inline-block'; row.append(left, right); fb.append(row);
+    });
+    if (fl.length) { const tot = el('div', 'card'); tot.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-radius:20px';
+      const r2 = el('div', 'res'); r2.append(num(money(D.invested), 'amt'), document.createElement('br'), num(sar(D.invested), 'pc'));
+      tot.append(el('p', 'tk', 'رأس مالك الحالي'), r2); fb.append(tot); }
+
     // الصفقات مجمّعة حسب اليوم، وربحك أنت فقط في كل صفقة
     const box = document.getElementById('trades');
     const count = n => n === 1 ? 'صفقة واحدة' : n === 2 ? 'صفقتين' : n <= 10 ? n + ' صفقات' : n + ' صفقة';
